@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Absensi Guru SMAN 1 Maron</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #a86eff, #d4b3ff, #f3e5ff);
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 540px;
+            margin: auto;
+            background: white;
+            padding: 28px;
+            margin-top: 45px;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(75, 0, 130, 0.25);
+            transition: 0.3s ease;
+            border: 2px solid #cca3ff;
+        }
+
+        .container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(75, 0, 130, 0.35);
+        }
+
+        h2 {
+            color: #5a0099;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 92%;
+            padding: 14px;
+            margin: 14px 0;
+            border-radius: 12px;
+            border: 1px solid #c48dff;
+            background: #f8f1ff;
+            transition: 0.3s;
+            font-size: 15px;
+        }
+
+        input:focus {
+            border-color: #9d45ff;
+            outline: none;
+            box-shadow: 0 0 8px rgba(157, 69, 255, 0.4);
+            background: #fbf6ff;
+        }
+
+        button {
+            width: 95%;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #8b35ff, #c27bff);
+            color: white;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 600;
+            margin-top: 12px;
+            transition: 0.25s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #6d1ee0, #b45aff);
+            transform: scale(1.05);
+        }
+
+        #camera {
+            width: 100%;
+            border-radius: 14px;
+            margin-top: 18px;
+            box-shadow: 0 6px 14px rgba(75, 0, 130, 0.25);
+        }
+
+        .guru-card {
+            padding: 20px;
+            background: #f5e6ff;
+            border-radius: 14px;
+            margin-top: 18px;
+            border: 1px solid #d8b4ff;
+            box-shadow: inset 0 0 12px rgba(0,0,0,0.05);
+        }
+
+        .guru-card h3 {
+            margin: 5px 0;
+            color: #5a0099;
+        }
+
+        .guru-card p {
+            margin: 5px 0;
+            color: #7a23b6;
+            font-weight: 500;
+        }
+
+        .foto-preview {
+            width: 100%;
+            margin-top: 18px;
+            border-radius: 14px;
+            box-shadow: 0 6px 16px rgba(75, 0, 130, 0.35);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="loginBox">
+    <h2>Login Absensi Guru</h2>
+    <input type="password" id="password" placeholder="Masukkan Password" />
+    <button onclick="login()">Masuk</button>
+</div>
+
+<div class="container" id="absenBox" style="display:none;">
+    <h2>Absensi Guru</h2>
+    <input type="text" id="nipInput" placeholder="Masukkan NIP" />
+    <button onclick="cariGuru()">Cari Guru</button>
+
+    <div id="guruInfo" class="guru-card" style="display:none;">
+        <h3 id="guruNama"></h3>
+        <p id="guruNip"></p>
+        <img id="guruFoto" src="" width="150" style="border-radius:10px;" />
+    </div>
+
+    <video id="camera" autoplay></video>
+    <canvas id="siswaCanvas" style="display:none;"></canvas>
+
+    <button id="absenBtn" style="display:none;" onclick="ambilFoto()">Ambil Foto & Simpan Absensi</button>
+    <img id="fotoPreview" class="foto-preview" style="display:none;" />
+
+    <p>Waktu Absensi: <span id="checkInText">-</span></p>
+</div>
+
+<script>
+let dataGuru = {
+    "1987654321": { nama: "Budi Santoso", foto: "https://i.ibb.co/2jW5L7M/user.png" },
+    "1234567890": { nama: "Siti Aminah", foto: "https://i.ibb.co/2jW5L7M/user.png" }
+};
+
+function login() {
+    let pw = document.getElementById("password").value;
+    if (pw === "GURU SMARON HEBAT") {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("absenBox").style.display = "block";
+        startCamera();
+    } else {
+        alert("Password salah!");
+    }
+}
+
+function startCamera() {
+    let cam = document.getElementById("camera");
+    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+        cam.srcObject = stream;
+    });
+}
+
+function cariGuru() {
+    let nip = document.getElementById("nipInput").value;
+    let info = dataGuru[nip];
+
+    if (info) {
+        document.getElementById("guruInfo").style.display = "block";
+        document.getElementById("guruNama").textContent = info.nama;
+        document.getElementById("guruNip").textContent = "NIP: " + nip;
+        document.getElementById("guruFoto").src = info.foto;
+        document.getElementById("absenBtn").style.display = "block";
+    } else {
+        alert("NIP tidak ditemukan!");
+    }
+}
+
+function ambilFoto() {
+    let video = document.getElementById("camera");
+    let canvas = document.getElementById("siswaCanvas");
+    let ctx = canvas.getContext("2d");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+
+    let fotoData = canvas.toDataURL("image/png");
+    document.getElementById("fotoPreview").src = fotoData;
+    document.getElementById("fotoPreview").style.display = "block";
+
+    let nip = document.getElementById("nipInput").value;
+    let nama = dataGuru[nip].nama;
+    let waktuSekarang = new Date().toLocaleString();
+    document.getElementById("checkInText").textContent = waktuSekarang;
+
+    let absensiData = JSON.parse(localStorage.getItem("absensi")) || [];
+
+    absensiData.push({
+        nip: nip,
+        nama: nama,
+        waktu: waktuSekarang,
+        foto: fotoData
+    });
+
+    localStorage.setItem("absensi", JSON.stringify(absensiData));
+
+    alert("Absensi berhasil disimpan!");
+}
+</script>
+
+</body>
+</html>
